@@ -20,3 +20,5 @@ func main() {
 }
 
 //git flow feature finish myfeature
+
+//git flow release

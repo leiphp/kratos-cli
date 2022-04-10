@@ -1,0 +1,73 @@
+# 打包任务
+build-job:
+  stage: build
+  # 指定标签，只有具有该标签的runner才会执行
+  tags:
+    - docker
+  variables:
+    APP_VERSION: "1.0"
+    DOCKER_REP: registry.cn-shenzhen.aliyuncs.com
+    DOCKER_NAMESPACE: gitdevops
+    DOCKER_USER: 6********3@qq.com
+    DOCKER_PWD: t*******i
+    IMAGE_NAME: go-testgo
+  script:
+    # 将main,Dockerfile、运行脚本复制到指定目录
+#    - cp Dockerfile /mydata/build/testGo/Dockerfile
+#    - cp run.sh /mydata/build/testGo/run.sh
+#    - cp main.go /mydata/build/testGo/main.go
+#    - cp go.mod /mydata/build/testGo/go.mod
+#    - cp -r vendor/ /mydata/build/testGo/vendor/
+    - echo $APP_VERSION
+    - docker build -f ./Dockerfile -t ${IMAGE_NAME}:MASTER-${APP_VERSION} .
+    - docker login -u ${DOCKER_USER} -p ${DOCKER_PWD} ${DOCKER_REP}
+    - docker tag ${IMAGE_NAME}:MASTER-${APP_VERSION} ${DOCKER_REP}/${DOCKER_NAMESPACE}/${IMAGE_NAME}:MASTER-${APP_VERSION}
+    - docker push ${DOCKER_REP}/${DOCKER_NAMESPACE}/${IMAGE_NAME}:MASTER-${APP_VERSION}
+    - docker rmi $(docker images -f "dangling=true" -q)
+    - docker rmi -f ${IMAGE_NAME}:MASTER-${APP_VERSION}
+    - docker rmi -f ${DOCKER_REP}/${DOCKER_NAMESPACE}/${IMAGE_NAME}:MASTER-${APP_VERSION}
+
+# 部署任务
+#deploy-job:
+#  stage: deploy
+#  tags:
+#    - docker
+#  script:
+#    # 进入指定目录并执行运行脚本
+#    - cd /mydata/build/testGo
+#    - chmod +x run.sh
+#    - ./run.sh
+
+deploy-job:
+  stage: deploy
+  tags:
+    - docker
+  variables:
+    K8S_TENCENT_TEST_SERVER_USER: root
+    K8S_TENCENT_TEST_SERVER: 192.168.1.100
+    DOCKER_NAMESPACE: gitdevops
+    CI_PROJECT_NAME: ci_project_testgo
+    CI_DEPLOYMENT_NAME: go-k8s-testgo
+    TEST_NAME_SPACE: test
+    IMAGE_TAG: MASTER-1.0
+  script:
+    - 'echo "Job $CI_JOB_NAME triggered by $GITLAB_USER_NAME ($GITLAB_USER_ID)"'
+    - 'echo "Build on $CI_COMMIT_REF_NAME"'
+    - 'echo "HEAD commit SHA $CI_COMMIT_SHA"'
+
+    # build go file
+#    - 'docker build -t $IMAGE_TAG .'
+#    - 'docker push $IMAGE_TAG'
+#    - 'echo "The build is sucessful,The image is : $IMAGE_TAG"'
+    # run ssh-agent
+    - eval $(ssh-agent -s)
+    # add ssh key stored in XXX variable to the agent store
+#    - echo "$HEYTEA_TENCENT_TEST_HOST_SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
+#    - mkdir -p ~/.ssh
+#    - chmod 700 ~/.ssh
+    # - ssh-keyscan -v "10.5.15.201" > ~/.ssh/known_hosts
+    # - chmod 644 ~/.ssh/known_hosts
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    - ssh $K8S_TENCENT_TEST_SERVER_USER@$K8S_TENCENT_TEST_SERVER -C "[[ -e /tmp/$CI_PROJECT_NAME ]] || mkdir /tmp/$CI_PROJECT_NAME"
+    - scp -qr deploy.yaml  $K8S_TENCENT_TEST_SERVER_USER@$K8S_TENCENT_TEST_SERVER:/tmp/$CI_PROJECT_NAME/
+    - ssh $K8S_TENCENT_TEST_SERVER_USER@$K8S_TENCENT_TEST_SERVER -C "[[ \$(kubectl get deploy -n $TEST_NAME_SPACE $CI_DEPLOYMENT_NAME |wc -l) -eq 0 ]] && kubectl apply -f /tmp/$CI_PROJECT_NAME/deploy.yaml -n $TEST_NAME_SPACE || kubectl set image -n $TEST_NAME_SPACE deployment $CI_DEPLOYMENT_NAME $CI_DEPLOYMENT_NAME=$IMAGE_TAG"

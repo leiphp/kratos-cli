@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-k8s-testgo
+spec:
+  selector:
+    matchLabels:
+      app: go-k8s-testgo
+  replicas: 2
+  #设置滚动升级策略
+  #Kubernetes在等待设置的时间后才开始进行升级，例如5s
+  minReadySeconds: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      #在升级过程中最多可以比原先设置多出的Pod数量
+      maxSurge: 1
+      #在升级过程中Deployment控制器最多可以删除多少个旧Pod，主要用于提供缓冲时间
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: go-k8s-testgo
+    spec:
+      #设置的阿里云私有镜像仓库登陆信息的secret(对应2.1.2的设置)
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: go-k8s-testgo
+          image: registry.cn-shenzhen.aliyuncs.com/gitdevops/go-testgo:MASTER-1.0
+          imagePullPolicy: Always
+          env:
+            - name: SERVER_PORT
+              value: "8000"
+            - name: SPRING_PROFILES_ACTIVE
+              value: test
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: go-k8s-testgo
+  labels:
+    svc: go-k8s-testgo
+spec:
+  selector:
+    app: go-k8s-testgo
+  ports:
+    - name: http
+      #Service在集群中暴露的端口（用于Kubernetes服务间的访问）
+      port: 8000
+      #Pod上的端口（与制作容器时暴露的端口一致，在微服务工程代码中指定的端口）
+      targetPort: 8000
+      #K8s集群外部访问的端口（外部机器访问）
+      nodePort: 30002
+  type: NodePort

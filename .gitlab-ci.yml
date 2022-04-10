@@ -1,0 +1,24 @@
+# 打包任务
+build-job:
+  stage: build
+  # 指定标签，只有具有该标签的runner才会执行
+  tags:
+    - docker
+  script:
+    # 将main,Dockerfile、运行脚本复制到指定目录
+    - cp Dockerfile /mydata/build/testGo/Dockerfile
+    - cp run.sh /mydata/build/testGo/run.sh
+    - cp main.go /mydata/build/testGo/main.go
+    - cp go.mod /mydata/build/testGo/go.mod
+    - cp -r vendor/ /mydata/build/testGo/vendor/
+
+# 部署任务
+deploy-job:
+  stage: deploy
+  tags:
+    - docker
+  script:
+    # 进入指定目录并执行运行脚本
+    - cd /mydata/build/testGo
+    - chmod +x run.sh
+    - ./run.sh

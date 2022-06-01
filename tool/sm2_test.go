@@ -1,0 +1,7 @@
+package tool
+
+import "testing"
+
+func TestSm2Decrypt(t *testing.T) {
+	Sm2Decrypt([]byte{"0447f1c838d0eb58cb7f253e65d09686c385845a0d0a2a38f2a79296e415c1a600f8c287ec9641031c9237a4d887c295bf2401ed8e909130899b0f3b82652f0543ea6ff129fd9e3f0de3ca9a926c3226e53f20524af01989a3dfce668d3bb19c534c9ed7e553adbeb99714316a046a6eca"})
+}

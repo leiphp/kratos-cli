@@ -1,7 +1,28 @@
 package tool
 
-import "testing"
+import (
+	"fmt"
+	"log"
+	"testing"
+)
+
+func TestGetSm2Keys(t *testing.T) {
+	GetSm2Keys()
+}
+
+func TestCreateSm2Encrypt(t *testing.T) {
+	ciphertxt,pub,err:=CreateSm2Encrypt([]byte("hello world"))
+	fmt.Println("ciphertxt:",ciphertxt)
+	fmt.Println("ciphertxt:",string(ciphertxt))
+	fmt.Println("pub:",pub)
+	fmt.Println("err:",err)
+	fmt.Println("res:",fmt.Sprintf("%x", ciphertxt))
+}
 
 func TestSm2Decrypt(t *testing.T) {
-	Sm2Decrypt([]byte{"0447f1c838d0eb58cb7f253e65d09686c385845a0d0a2a38f2a79296e415c1a600f8c287ec9641031c9237a4d887c295bf2401ed8e909130899b0f3b82652f0543ea6ff129fd9e3f0de3ca9a926c3226e53f20524af01989a3dfce668d3bb19c534c9ed7e553adbeb99714316a046a6eca"})
+	res, err:=Sm2Decrypt([]byte("3074022100f4ccc01672515b409a3bbd8fbdca089d6f8602142a492dc3c635abf124d28c370220458f3f3a82c75ee8d19410a4c2fa2807ae038ffcdb6c05349c7475266150900b0420c552d1228762f986f688ef3a12e7f5a92af7d97c7460a31b2d7505673755160e040b5a091f6cb7b76bec8da10d"))
+	if err != nil {
+		log.Fatal("err:",err)
+	}
+	fmt.Println("res:",res)
 }

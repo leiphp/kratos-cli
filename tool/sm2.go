@@ -2,7 +2,8 @@ package tool
 
 import (
 "crypto/rand"
-"github.com/pkg/errors"
+	"fmt"
+	"github.com/pkg/errors"
 "github.com/tjfoc/gmsm/sm2"
 "log"
 "math/big"
@@ -59,6 +60,7 @@ func CreateSm2Encrypt(msg []byte) ([]byte,*sm2.PublicKey,error) {
 func Sm2Decrypt(ciphertxt []byte) (string,error) {
 	//读取密钥对
 	re := ReadValue("sm2Value.txt")
+	fmt.Println("re:",re)
 
 	if len(re)<3 {
 		return "", errors.New("文件内容损坏！")

@@ -20,8 +20,9 @@ type greeterGrpcService struct{}
 
 // GRPC调用
 func (s *greeterGrpcService) GrpcSayHello(c *gin.Context, client v1.GreeterClient) (interface{}, error) {
+	name := c.DefaultQuery("name", "LeiXiaoTian")
 	rsp, err := client.SayHello(c, &v1.HelloRequest{
-		Name: "LeiPHP",
+		Name: name,
 	})
 	if err != nil {
 		fmt.Println(err)
